@@ -1,13 +1,19 @@
 import struct
 
-**AES used for encrption Cipher 
+#AES used for encryption Cipher 
 from Crypto.Cipher import AES
-from Crypto.Cipher import XOR
 
-** Random Function to be used for IV
+#Random Function to be used for IV
 from Crypto import Random 
 
 import base64
+
+#16 bit = 128 bit key for AES
+BLOCK_SIZE = 16
+
+#Removed XOR encryption
+#from Crypto.Cipher import XOR
+
 
 from dh import create_dh_key, calculate_dh_secret
 
@@ -31,15 +37,20 @@ class StealthConn(object):
             self.send(bytes(str(my_public_key), "ascii"))
             # Receive their public key
             their_public_key = int(self.recv())
-            # Obtain our shared secret
+            # Obtain our shared secret 
+			#Shared key is in hash format
             shared_hash = calculate_dh_secret(their_public_key, my_private_key)
             print("Shared hash: {}".format(shared_hash))
 
 		#Need to replace the XOR algorithm as it is the current cipher	
         # Default XOR algorithm can only take a key of length 32
-        self.cipher = 
+        #self.cipher = XOR.new(shared_hash[:4])
 		
-		#self.cipher = XOR.new(shared_hash[:4])
+		#Initialisation Vector is random 16 bit variable
+        IV = Random.new().read(BLOCK_SIZE)
+		
+		#self.cipher has been defined with inputs from key and IV
+        self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, IV)
 
     def send(self, data):
         if self.cipher:
