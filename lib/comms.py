@@ -1,6 +1,13 @@
 import struct
 
+**AES used for encrption Cipher 
+from Crypto.Cipher import AES
 from Crypto.Cipher import XOR
+
+** Random Function to be used for IV
+from Crypto import Random 
+
+import base64
 
 from dh import create_dh_key, calculate_dh_secret
 
@@ -28,8 +35,11 @@ class StealthConn(object):
             shared_hash = calculate_dh_secret(their_public_key, my_private_key)
             print("Shared hash: {}".format(shared_hash))
 
+		#Need to replace the XOR algorithm as it is the current cipher	
         # Default XOR algorithm can only take a key of length 32
-        self.cipher = XOR.new(shared_hash[:4])
+        self.cipher = 
+		
+		#self.cipher = XOR.new(shared_hash[:4])
 
     def send(self, data):
         if self.cipher:
