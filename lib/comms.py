@@ -57,13 +57,13 @@ class StealthConn(object):
 		
 		#self.cipher has been defined with inputs from key and IV
         self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, IV)
-		
-		#self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
-		self.HMAC = HMAC.new(shared_hash[32:])
+
+        #self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
+        self.HMAC = HMAC.new(shared_hash[32:])
     def send(self, data):
         if self.cipher:
 			#Hashed the message as part of the HMAC
-			hmac = self.HMAC.update(data)
+            hmac = self.HMAC.update(data)
 			#HMAC has been appended to the message to ensure integrity
             encrypted_data = self.cipher.encrypt(data + hmac)
             if self.verbose:
