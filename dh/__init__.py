@@ -26,8 +26,10 @@ prime = read_hex(raw_prime)
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    a = random.randint(0, int(2**8))
-    return (a, a)
+    #a = random.randint(0, int(2**8))
+    secret_key = random.randint(0, int(pow(2, 8)));
+    public_key = secret_key * prime;
+    return (public_key, secret_key)
 
 def calculate_dh_secret(their_public, my_private):
     # Calculate the shared secret
