@@ -3,16 +3,17 @@ import struct
 #AES used for encryption Cipher 
 from Crypto.Cipher import AES
 
-#Import padding for block cipher
-from crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
+#base64 used for encoding and decoding
+from base64 import b64encode, b64decode
 
 #Random Function to be used for IV
 from Crypto import Random 
 
-import base64
-
 #16 bit = 128 bit key for AES
 BLOCK_SIZE = 16
+
+pad = lambda s: s + (BLOCK_SIZE - len(s) % BLOCK_SIZE) * chr(BLOCK_SIZE - len(s) % BLOCK_SIZE) 
+unpad = lambda s : s[0:-ord(s[-1])]
 
 #HMAC imported to be used as Integrity Measure
 from Crypto.Hash import HMAC 
@@ -47,7 +48,8 @@ class StealthConn(object):
 			#Shared key is in hash format
             shared_hash = calculate_dh_secret(their_public_key, my_private_key)
             print("Shared hash: {}".format(shared_hash))
-
+    
+	 def encrypt
 		#Need to replace the XOR algorithm as it is the current cipher	
         # Default XOR algorithm can only take a key of length 32
         #self.cipher = XOR.new(shared_hash[:4])
@@ -56,7 +58,9 @@ class StealthConn(object):
         IV = Random.new().read(BLOCK_SIZE)
 		
 		#self.cipher has been defined with inputs from key and IV
-        self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, IV)
+        self.cipher.encrypt = AES.new(shared_hash[:32], AES.MODE_CBC, IV)
+		
+		
 
         #self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
         self.HMAC = HMAC.new(shared_hash[32:])
