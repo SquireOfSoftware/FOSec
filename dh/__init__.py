@@ -41,7 +41,7 @@ def calculate_dh_secret(their_public, my_private):
     #print("their public: ", their_public);
     #print("my private: ", my_private);
     shared_secret = pow(their_public, my_private) % prime;
-    print ("shared secret: ", shared_secret);
+    #print ("shared secret: ", shared_secret);
     # Hash the value so that:
     # (a) There's no bias in the bits of the output
     #     (there may be bias if the shared secret is used raw)
