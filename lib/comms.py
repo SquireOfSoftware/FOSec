@@ -1,5 +1,6 @@
 import struct
-
+import codecs
+import base64
 
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
@@ -7,12 +8,6 @@ from Crypto import Random
 from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 from lib.helpers import read_hex
 
-import base64
-
-#16 bit = 128 bit key for AES
-BLOCK_SIZE = 16
-
-IV = Random.new().read(BLOCK_SIZE)
 
 from dh import create_dh_key, calculate_dh_secret
 
@@ -24,7 +19,7 @@ class StealthConn(object):
         self.server = server
         self.verbose = verbose
         self.initiate_session()
-		self.shared_hash = None
+        self.shared_hash = None
 
     def initiate_session(self):
         # Perform the initial connection handshake for agreeing on a shared secret
@@ -39,20 +34,17 @@ class StealthConn(object):
             their_public_key = int(self.recv())
             # Obtain our shared secret
             self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)			
-			#Shared key is in hash format
-			if self.verbose:
-				print("Shared hash: {}".format(self.shared_hash))
-			self.share_hash = bytes.fromhex(self.share_hash)
+			#Shared key is in hash format                           
+            self.shared_hash = codecs.decode(self.shared_hash, 'hex_codec')
 
-        IV = Random.new().read(BLOCK_SIZE)
+        IV = Random.get_random_bytes((AES.block_size)
 		
-		#self.cipher has been defined with inputs from key and IV
         #would you use a random number and wrap round to 56 bits?
-        self.cipher = AES.new(shared_hash[:32], AES.MODE_CBC, IV)
+        self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV)
         #print("length of hash: ", len(shared_hash));
         #print("type of hash: ", type(shared_hash));
         #self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
-        self.HMAC = HMAC.new(shared_hash[32:].encode("ascii"))
+        self.HMAC = HMAC.new(self.shared_hash[32:].encode("ascii"))
 		
     def send(self, data):
         if self.cipher:
