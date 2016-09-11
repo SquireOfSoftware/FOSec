@@ -1,21 +1,15 @@
 import struct
 
-#AES used for encryption Cipher 
+
 from Crypto.Cipher import AES
-
-#Import padding for block cipher
-#from crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
-
-#Random Function to be used for IV
-from Crypto import Random 
+from Crypto.Hash import HMAC, SHA256
+from Crypto import Random  
+from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 
 import base64
 
 #16 bit = 128 bit key for AES
 BLOCK_SIZE = 16
-
-#HMAC imported to be used as Integrity Measure
-from Crypto.Hash import HMAC 
 
 #Removed XOR encryption
 #from Crypto.Cipher import XOR
