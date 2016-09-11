@@ -42,6 +42,7 @@ class StealthConn(object):
 		
     def send(self, data):
         if self.cipher:
+            # generate new IV for each message sent
             IV = Random.get_random_bytes(AES.block_size);
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
 
@@ -94,19 +95,19 @@ class StealthConn(object):
 
             # take out the hmac
             received_hmac = unpadded_data_with_hmac[-32:];
-
-            #if ()
-
-            print("decrypted data: ", data);
+            #print("received_hmac: ", received_hmac);
+            generated_hmac = HMAC.new(self.shared_hash[32:], digestmod = SHA256).digest();
+            #print("generated_hmac: ", generated_hmac);
+            if (received_hmac != generated_hmac):
+                print("TAMPERED MESSAGE");
 
             if self.verbose:
                 print("Receiving packet of length {}".format(pkt_len))
                 print("Encrypted data: {}".format(repr(encrypted_data)))
                 print("Original data: {}".format(data))
-        else:
+        else: #used by other methods to be triggered
             data = encrypted_data;
         
-
         return data;
     def close(self):
         self.conn.close()
