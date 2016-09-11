@@ -5,14 +5,13 @@ from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from Crypto import Random  
 from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
+from lib.helpers import read_hex
 
 import base64
 
 #16 bit = 128 bit key for AES
 BLOCK_SIZE = 16
 
-#Removed XOR encryption
-#from Crypto.Cipher import XOR
 IV = Random.new().read(BLOCK_SIZE)
 
 from dh import create_dh_key, calculate_dh_secret
@@ -25,6 +24,7 @@ class StealthConn(object):
         self.server = server
         self.verbose = verbose
         self.initiate_session()
+		self.shared_hash = None
 
     def initiate_session(self):
         # Perform the initial connection handshake for agreeing on a shared secret
@@ -37,17 +37,14 @@ class StealthConn(object):
             self.send(bytes(str(my_public_key), "ascii"))
             # Receive their public key
             their_public_key = int(self.recv())
-            # Obtain our shared secret 
+            # Obtain our shared secret
+            self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)			
 			#Shared key is in hash format
-            shared_hash = calculate_dh_secret(their_public_key, my_private_key)
-            print("Shared hash: {}".format(shared_hash))
+			if self.verbose:
+				print("Shared hash: {}".format(self.shared_hash))
+			self.share_hash = bytes.fromhex(self.share_hash)
 
-		#Need to replace the XOR algorithm as it is the current cipher	
-        # Default XOR algorithm can only take a key of length 32
-        #self.cipher = XOR.new(shared_hash[:4])
-		
-		#Initialisation Vector is random 16 bit variable
-        #IV = Random.new().read(BLOCK_SIZE)
+        IV = Random.new().read(BLOCK_SIZE)
 		
 		#self.cipher has been defined with inputs from key and IV
         #would you use a random number and wrap round to 56 bits?
@@ -56,6 +53,7 @@ class StealthConn(object):
         #print("type of hash: ", type(shared_hash));
         #self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
         self.HMAC = HMAC.new(shared_hash[32:].encode("ascii"))
+		
     def send(self, data):
         if self.cipher:
             #print("Sending data now.");
