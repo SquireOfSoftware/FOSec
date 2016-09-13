@@ -7,6 +7,11 @@ from Crypto.Hash import HMAC, SHA256
 from Crypto import Random  
 from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 
+
+# Format the time stamp to the milliseconds for preventing replay attacks
+timestamp_format = "%Y-%m-%d %H:%M:%S:%f"
+timestamp_format_len = 26
+
 from dh import create_dh_key, calculate_dh_secret
 
 class StealthConn(object):
