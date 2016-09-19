@@ -10,7 +10,7 @@ from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 from dh import create_dh_key, calculate_dh_secret
 
 class StealthConn(object):
-    def __init__(self, conn, client=False, server=False, verbose=False):
+    def __init__(self, conn, client=False, server=False, verbose=True):
         self.conn = conn
         self.cipher = None
         self.client = client
@@ -26,7 +26,7 @@ class StealthConn(object):
             my_public_key, my_private_key = create_dh_key()
             # Send them our public key
             self.send(bytes(str(my_public_key), "ascii"))
-            # Receive their public key
+            # Receive their public keys
             their_public_key = int(self.recv())
             # Obtain our shared secret
             self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)			
@@ -34,24 +34,29 @@ class StealthConn(object):
             self.shared_hash = codecs.decode(self.shared_hash, 'hex_codec')
 			#PRNG Seed is taken from 32 bits of the shared key
             random.seed(self.shared_hash[:32])
-
+		
+        IV = Random.get_random_bytes(AES.block_size);
+        self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
 		
     def send(self, data):
         if self.cipher:
             # generate new IV for each message sent
             IV = Random.get_random_bytes(AES.block_size);
+			#Define how the encryption will work
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
 
 			#Create a unique session ID 
             ID = str(int(random.random()*pow(10,12))).encode("ascii")[:16]
 			
+			#Attach the session ID to the message
             data_id = data + ID
+			
             hmac_data_id = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256)
             hmac_digest_data_id = data_id + hmac_data_id.digest()
 			
 			#HMAC has been appended to the message to ensure integrity
-            IV = self.cipher.IV;
-            message = data + hmac.digest();
+            #IV = self.cipher.IV;
+            #message = data + hmac.digest();
             
             # pad message here
             message = ANSI_X923_pad(hmac_digest_data_id, AES.block_size);
