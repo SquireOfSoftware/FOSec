@@ -29,41 +29,41 @@ class StealthConn(object):
             # Receive their public keys
             their_public_key = int(self.recv())
             # Obtain our shared secret
-            self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)			
-			#Shared key is in hash format                           
+            self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)            
+            #Shared key is in hash format                           
             self.shared_hash = codecs.decode(self.shared_hash, 'hex_codec')
-			#PRNG Seed is taken from 32 bits of the shared key
+            #PRNG Seed is taken from 32 bits of the shared key
             random.seed(self.shared_hash[:32])
-		
+
+        # This is used in the initial set up
         IV = Random.get_random_bytes(AES.block_size);
         self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
-		
+        
     def send(self, data):
         if self.cipher:
             # generate new IV for each message sent
             IV = Random.get_random_bytes(AES.block_size);
-			#Define how the encryption will work
+            #Define how the encryption will work
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
 
-			#Create a unique session ID 
-            ID = str(int(random.random()*pow(10,12))).encode("ascii")[:16]
-			
-			#Attach the session ID to the message
+            #Create a unique session ID 
+            ID = str(int(random.random()*pow(10,AES.block_size + 1))).encode("ascii")[:16]
+            
+            #print("ID: ", ID, len(ID));
+
+            #Attach the session ID to the message 
             data_id = data + ID
-			
             hmac_data_id = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256)
             hmac_digest_data_id = data_id + hmac_data_id.digest()
-			
-			#HMAC has been appended to the message to ensure integrity
-            #IV = self.cipher.IV;
-            #message = data + hmac.digest();
+            
+            #HMAC has been appended to the message to ensure integrity
             
             # pad message here
             message = ANSI_X923_pad(hmac_digest_data_id, AES.block_size);
             
             # IV must be read to decrypt the message
             encrypted_data = IV + self.cipher.encrypt(message);
-
+            
             if self.verbose:
                 print("Original data: {}".format(data))
                 print("Encrypted data: {}".format(repr(encrypted_data)))
@@ -89,7 +89,7 @@ class StealthConn(object):
             IV = encrypted_data[:AES.block_size];
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
             
-			# decrypt the message
+            # decrypt the message
             padded_data = self.cipher.decrypt(encrypted_data[AES.block_size:]);
 
             # remove the padding
@@ -97,29 +97,27 @@ class StealthConn(object):
 
             # take out the main contents which is largely composed of the hmac
             data_id = hmac_digest_data_id[:-32];
+
             # take out the hmac
             received_hmac = hmac_digest_data_id[-32:];
-			
-			# take out the session ID 
+            
+            # take out the session ID 
             recieved_id = data_id[-16:]
             data = data_id[:-16]
-			
-			#Reproduce SessionID to compare to the recieved one
-            generated_id = str(int(random.random()*pow(10,12))).encode("ascii")[:16]
-			
-			
-            #print("received_hmac: ", received_hmac);
+            
+            #Reproduce SessionID to compare to the recieved one
+            generated_id = str(int(random.random()*pow(10,AES.block_size + 1))).encode("ascii")[:16]
+            
             generated_hmac = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256).digest();
-			
-            #print("generated_hmac: ", generated_hmac);
+            
             if (received_hmac != generated_hmac):
                 print("TAMPERED MESSAGE");
-				#self.close()
+                self.close();
 
             if (recieved_id != generated_id): 
-                print("MESSAGE REPLAYED")
-				#self.close()
-				
+                print("MESSAGE REPLAYED");
+                self.close();
+                
             if self.verbose:
                 print("Receiving packet of length {}".format(pkt_len))
                 print("Encrypted data: {}".format(repr(encrypted_data)))
