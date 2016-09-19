@@ -1,16 +1,11 @@
 import struct
 import codecs
-import base64
+import random
 
 from Crypto.Cipher import AES
 from Crypto.Hash import HMAC, SHA256
 from Crypto import Random  
 from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
-
-
-# Format the time stamp to the milliseconds for preventing replay attacks
-timestamp_format = "%Y-%m-%d %H:%M:%S:%f"
-timestamp_format_len = 26
 
 from dh import create_dh_key, calculate_dh_secret
 
@@ -37,13 +32,9 @@ class StealthConn(object):
             self.shared_hash = calculate_dh_secret(their_public_key, my_private_key)			
 			#Shared key is in hash format                           
             self.shared_hash = codecs.decode(self.shared_hash, 'hex_codec')
+			#PRNG Seed is taken from 32 bits of the shared key
+            random.seed(self.shared_hash[:32])
 
-        IV = Random.get_random_bytes((AES.block_size));
-        #would you use a random number and wrap round to 56 bits?
-        self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
-
-        #self.HMAC is using half of the shared key as the MAC(unique ID) and Hashed it
-        self.HMAC = HMAC.new(self.shared_hash[32:], digestmod = SHA256)
 		
     def send(self, data):
         if self.cipher:
@@ -51,16 +42,19 @@ class StealthConn(object):
             IV = Random.get_random_bytes(AES.block_size);
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
 
-            # data must be padded
-			#Hashed the message as part of the HMAC
-            hmac = self.HMAC;
-
+			#Create a unique session ID 
+            ID = str(int(random.random()*pow(10,12))).encode("ascii")[:16]
+			
+            data_id = data + ID
+            hmac_data_id = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256)
+            hmac_digest_data_id = data_id + hmac_data_id.digest()
+			
 			#HMAC has been appended to the message to ensure integrity
             IV = self.cipher.IV;
             message = data + hmac.digest();
             
             # pad message here
-            message = ANSI_X923_pad(message, AES.block_size);
+            message = ANSI_X923_pad(hmac_digest_data_id, AES.block_size);
             
             # IV must be read to decrypt the message
             encrypted_data = IV + self.cipher.encrypt(message);
@@ -89,23 +83,38 @@ class StealthConn(object):
         if self.cipher:
             IV = encrypted_data[:AES.block_size];
             self.cipher = AES.new(self.shared_hash[:32], AES.MODE_CBC, IV);
-
+            
+			# decrypt the message
             padded_data = self.cipher.decrypt(encrypted_data[AES.block_size:]);
 
             # remove the padding
-            unpadded_data_with_hmac = ANSI_X923_unpad(padded_data, AES.block_size);
+            hmac_digest_data_id = ANSI_X923_unpad(padded_data, AES.block_size);
 
             # take out the main contents which is largely composed of the hmac
-            data = unpadded_data_with_hmac[:-32];
-
+            data_id = hmac_digest_data_id[:-32];
             # take out the hmac
-            received_hmac = unpadded_data_with_hmac[-32:];
+            received_hmac = hmac_digest_data_id[-32:];
+			
+			# take out the session ID 
+            recieved_id = data_id[-16:]
+            data = data_id[:-16]
+			
+			#Reproduce SessionID to compare to the recieved one
+            generated_id = str(int(random.random()*pow(10,12))).encode("ascii")[:16]
+			
+			
             #print("received_hmac: ", received_hmac);
-            generated_hmac = HMAC.new(self.shared_hash[32:], digestmod = SHA256).digest();
+            generated_hmac = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256).digest();
+			
             #print("generated_hmac: ", generated_hmac);
             if (received_hmac != generated_hmac):
                 print("TAMPERED MESSAGE");
+				#self.close()
 
+            if (recieved_id != generated_id): 
+                print("MESSAGE REPLAYED")
+				#self.close()
+				
             if self.verbose:
                 print("Receiving packet of length {}".format(pkt_len))
                 print("Encrypted data: {}".format(repr(encrypted_data)))
