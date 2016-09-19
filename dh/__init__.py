@@ -5,7 +5,7 @@ from lib.helpers import read_hex
 
 # Project TODO: Is this the best choice of prime? Why? Why not? Feel free to replace!
 
-# 1536 bit safe prime for Diffie-Hellman key exchange
+# 4096 bit safe prime for Diffie-Hellman key exchange
 # obtained from RFC 3526
 raw_prime = """FFFFFFFF FFFFFFFF C90FDAA2 2168C234 C4C6628B 80DC1CD1
       29024E08 8A67CC74 020BBEA6 3B139B22 514A0879 8E3404DD
@@ -38,19 +38,13 @@ GENERATOR_BASE = 2;
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    #a = random.randint(0, int(2**8))
     secret_key = random.randint(0, int(pow(2, 8)));
     public_key = pow(GENERATOR_BASE, secret_key) % prime;
     
-    #print("your secret: ", secret_key);
-    #print("your public: ", public_key);
-
     return (public_key, secret_key)
 
 def calculate_dh_secret(their_public, my_private):
     # Calculate the shared secret
-    #print("their public: ", their_public);
-    #print("my private: ", my_private);
     shared_secret = pow(their_public, my_private) % prime;
     #print ("shared secret: ", shared_secret);
     # Hash the value so that:
