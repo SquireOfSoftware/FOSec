@@ -10,7 +10,7 @@ from lib.crypto_utils import ANSI_X923_pad, ANSI_X923_unpad
 from dh import create_dh_key, calculate_dh_secret
 
 class StealthConn(object):
-    def __init__(self, conn, client=False, server=False, verbose=True):
+    def __init__(self, conn, client=False, server=False, verbose=False):
         self.conn = conn
         self.cipher = None
         self.client = client
@@ -49,14 +49,12 @@ class StealthConn(object):
             #Create a unique session ID 
             ID = str(int(random.random()*pow(10,AES.block_size + 1))).encode("ascii")[:16]
             
-            #print("ID: ", ID, len(ID));
-
             #Attach the session ID to the message 
             data_id = data + ID
             hmac_data_id = HMAC.new(self.shared_hash[32:], data_id, digestmod=SHA256)
-            hmac_digest_data_id = data_id + hmac_data_id.digest()
             
             #HMAC has been appended to the message to ensure integrity
+            hmac_digest_data_id = data_id + hmac_data_id.digest()
             
             # pad message here
             message = ANSI_X923_pad(hmac_digest_data_id, AES.block_size);
