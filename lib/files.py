@@ -1,5 +1,8 @@
 import os
 from Crypto.PublicKey import RSA
+from Crypto.Signature import PKCS1_v1_5
+from Crypto.Hash import SHA
+
 
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
@@ -38,8 +41,11 @@ def verify_file(f):
     lines = f.split(bytes("\n", "ascii"), 1)
     first_line = lines[0]
     if first_line == bytes("Caesar", "ascii"):
-        return True
-    return False
+        print "This Signature is authentic."
+    else:
+		print "Th Signature is not authentic"
+	
+	
 
 def process_file(fn, f):
     if verify_file(f):
