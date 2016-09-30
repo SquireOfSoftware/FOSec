@@ -8,7 +8,6 @@ def sign_file(f):
     # TODO: For Part 2, you'll use public key crypto here
     # The existing scheme just ensures the updates start with the line 'Caesar'
     # This is naive -- replace it with something better!
-    #return bytes("Caesar\n", "ascii") + f 'This method sucks'
 
     key = RSA.importKey(open('master.privatekey.der').read())
 

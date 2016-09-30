@@ -40,13 +40,12 @@ def verify_file(f):
     # Naive verification by ensuring the first line has the "passkey"
     lines = f.split(bytes("\n", "ascii"), 1)
     first_line = lines[0];
-    # first_line = lines[0];
-    key = RSA.importKey(open('master.publickey.der').read())
 
     hash = SHA.new(lines[1]);
+    key = RSA.importKey(open('master.publickey.der').read())
     verifier = PKCS1_v1_5.new(key);
-
     is_sent_from_master = verifier.verify(hash, first_line);
+
     print(first_line);
 
     if (is_sent_from_master):
