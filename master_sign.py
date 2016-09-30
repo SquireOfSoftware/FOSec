@@ -9,8 +9,14 @@ def sign_file(f):
     # The existing scheme just ensures the updates start with the line 'Caesar'
     # This is naive -- replace it with something better!
     #return bytes("Caesar\n", "ascii") + f 'This method sucks'
-	signer = PKCS1_v1_5.new(f)
-	return bytes (signer, "ascii") + f
+
+    key = RSA.importKey(open('master.privatekey.der').read())
+
+    hash = SHA.new(f);
+    signer = PKCS1_v1_5.new(key);
+
+    print(len(bytes(signer.sign(hash))));
+    return bytes(signer.sign(hash)) + bytes('\n', "ascii") + f;
 
 
 if __name__ == "__main__":
