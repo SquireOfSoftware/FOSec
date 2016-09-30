@@ -46,14 +46,14 @@ def verify_file(f):
     hash = SHA.new(lines[1]);
     verifier = PKCS1_v1_5.new(key);
 
-    print(verifier.verify(hash, first_line));
+    is_sent_from_master = verifier.verify(hash, first_line);
     print(first_line);
 
-    if (verifier.verify(hash, first_line)):
+    if (is_sent_from_master):
         print("This Signature is authentic.");
     else:
         print("The Signature is not authentic");
-
+    return is_sent_from_master;
 
 def process_file(fn, f):
     if verify_file(f):
