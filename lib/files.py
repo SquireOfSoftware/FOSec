@@ -39,13 +39,21 @@ def verify_file(f):
     # TODO: For Part 2, you'll use public key crypto here
     # Naive verification by ensuring the first line has the "passkey"
     lines = f.split(bytes("\n", "ascii"), 1)
-    first_line = lines[0]
-    if first_line == bytes("Caesar", "ascii"):
-        print "This Signature is authentic."
+    first_line = lines[0];
+    # first_line = lines[0];
+    key = RSA.importKey(open('master.publickey.der').read())
+
+    hash = SHA.new(lines[1]);
+    verifier = PKCS1_v1_5.new(key);
+
+    print(verifier.verify(hash, first_line));
+    print(first_line);
+
+    if (verifier.verify(hash, first_line)):
+        print("This Signature is authentic.");
     else:
-		print "Th Signature is not authentic"
-	
-	
+        print("The Signature is not authentic");
+
 
 def process_file(fn, f):
     if verify_file(f):
