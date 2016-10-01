@@ -3,12 +3,12 @@ from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_v1_5
 from Crypto.Hash import SHA
 
-
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
 filestore = {}
 # Valuable data to be sent to the botmaster
 valuables = []
+masters_public_key = RSA.importKey(open('master.publickey.der').read())
 
 ###
 
@@ -17,13 +17,15 @@ def save_valuable(data):
 
 def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
-    return data
+    hashed_data = SHA.new(data);
+    return masters_public_key.encrypt(data, hashed_data);
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
     valuable_data = "\n".join(valuables)
     valuable_data = bytes(valuable_data, "ascii")
-    encrypted_master = encrypt_for_master(valuable_data)
+    # encrypted_master is a "tuple" data structure, the first section is what we want
+    encrypted_master = encrypt_for_master(valuable_data)[0]
 
     # "Upload" it to pastebot (i.e. save in pastebot folder)
     f = open(os.path.join("pastebot.net", fn), "wb")
@@ -42,11 +44,8 @@ def verify_file(f):
     first_line = lines[0];
 
     hash = SHA.new(lines[1]);
-    key = RSA.importKey(open('master.publickey.der').read())
-    verifier = PKCS1_v1_5.new(key);
+    verifier = PKCS1_v1_5.new(masters_public_key);
     is_sent_from_master = verifier.verify(hash, first_line);
-
-    print(first_line);
 
     if (is_sent_from_master):
         print("This Signature is authentic.");

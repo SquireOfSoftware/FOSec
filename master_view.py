@@ -1,11 +1,16 @@
 import os
 
+from Crypto.PublicKey import RSA
 
 def decrypt_valuables(f):
     # TODO: For Part 2, you'll need to decrypt the contents of this file
     # The existing scheme uploads in plaintext
     # As such, we just convert it back to ASCII and print it out
-    decoded_text = str(f, 'ascii')
+
+    masters_private_key = RSA.importKey(open('master.privatekey.der').read());
+    decrypted_file = masters_private_key.decrypt(f);
+
+    decoded_text = str(decrypted_file, 'ascii')
     print(decoded_text)
 
 
