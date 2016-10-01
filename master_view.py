@@ -13,11 +13,11 @@ def decrypt_valuables(f):
 
     pkcs_cipher = PKCS1_v1_5.new(masters_private_key);
     decryption_error = None;
-    hexdigest = f[-40:].decode("ascii");
+    hexdigest = f[-20:];
 
-    encrypted_data = f[:-40];
+    encrypted_data = f[:-20];
     decrypted_file = pkcs_cipher.decrypt(encrypted_data, decryption_error);
-    decrypted_file_hash = SHA.new(decrypted_file).hexdigest();
+    decrypted_file_hash = SHA.new(decrypted_file).digest();
 
     if decryption_error is not None:
         print("There is a problem with decrypting this file.");
