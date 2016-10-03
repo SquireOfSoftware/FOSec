@@ -14,7 +14,7 @@ def sign_file(f):
     hash = SHA.new(f);
     signer = PKCS1_v1_5.new(key);
 
-    print(len(bytes(signer.sign(hash))));
+    #print(len(bytes(signer.sign(hash))));
     return signer.sign(hash) + bytes('\n', "ascii") + f;
 
 
