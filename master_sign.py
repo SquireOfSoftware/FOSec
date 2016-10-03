@@ -1,8 +1,7 @@
 import os
 from Crypto.PublicKey import RSA
 from Crypto.Signature import PKCS1_PSS
-from Crypto.Hash import SHA
-
+from Crypto.Hash import SHA256
 
 def sign_file(f):
     # TODO: For Part 2, you'll use public key crypto here
@@ -11,14 +10,10 @@ def sign_file(f):
 
     key = RSA.importKey(open('master.privatekey.der').read())
 
-    hash = SHA.new(f);
+    hash = SHA256.new(f);
     signer = PKCS1_PSS.new(key);
     signature = signer.sign(hash)
-	
-    return signature + f
-    #print(len(bytes(signer.sign(hash))));
-    #return signer.sign(hash) + bytes('\n', "ascii") + f;
-
+    return signature + f;
 
 if __name__ == "__main__":
     fn = input("Which file in pastebot.net should be signed? ")
