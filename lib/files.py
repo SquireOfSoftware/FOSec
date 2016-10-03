@@ -1,7 +1,7 @@
 import os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA
 
 # Instead of storing files on disk,
@@ -47,7 +47,7 @@ def verify_file(f):
     first_line = lines[0];
 
     hash = SHA.new(lines[1]);
-    verifier = PKCS1_v1_5.new(masters_public_key);
+    verifier = PKCS1_PSS.new(masters_public_key);
     is_sent_from_master = verifier.verify(hash, first_line);
 
     if (is_sent_from_master):
