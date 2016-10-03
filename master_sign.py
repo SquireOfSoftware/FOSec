@@ -1,6 +1,6 @@
 import os
 from Crypto.PublicKey import RSA
-from Crypto.Signature import PKCS1_v1_5
+from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA
 
 
@@ -12,7 +12,7 @@ def sign_file(f):
     key = RSA.importKey(open('master.privatekey.der').read())
 
     hash = SHA.new(f);
-    signer = PKCS1_v1_5.new(key);
+    signer = PKCS1_PSS.new(key);
 
     #print(len(bytes(signer.sign(hash))));
     return signer.sign(hash) + bytes('\n', "ascii") + f;
