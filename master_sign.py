@@ -13,9 +13,11 @@ def sign_file(f):
 
     hash = SHA.new(f);
     signer = PKCS1_PSS.new(key);
-
+    signature = signer.sign(hash)
+	
+    return signature + f
     #print(len(bytes(signer.sign(hash))));
-    return signer.sign(hash) + bytes('\n', "ascii") + f;
+    #return signer.sign(hash) + bytes('\n', "ascii") + f;
 
 
 if __name__ == "__main__":
