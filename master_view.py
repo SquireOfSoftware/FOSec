@@ -2,7 +2,7 @@ import os
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
-from Crypto.Hash import SHA
+from Crypto.Hash import SHA256
 
 def decrypt_valuables(f):
     # TODO: For Part 2, you'll need to decrypt the contents of this file
@@ -13,20 +13,18 @@ def decrypt_valuables(f):
 
     pkcs_cipher = PKCS1_v1_5.new(masters_private_key);
     decryption_error = None;
-    hexdigest = f[-20:];
-
-    encrypted_data = f[:-20];
+    digest = f[-SHA256.digest_size:];
+    encrypted_data = f[:-SHA256.digest_size];
     decrypted_file = pkcs_cipher.decrypt(encrypted_data, decryption_error);
-    decrypted_file_hash = SHA.new(decrypted_file).digest();
+    decrypted_file_hash = SHA256.new(decrypted_file).digest();
 
     if decryption_error is not None:
         print("There is a problem with decrypting this file.");
-    elif hexdigest != decrypted_file_hash:
+    elif digest != decrypted_file_hash:
         print("This file has been tampered with");
     else:
         decoded_text = str(decrypted_file, 'ascii');
         print(decoded_text);
-
 
 if __name__ == "__main__":
     fn = input("Which file in pastebot.net does the botnet master want to view? ")
