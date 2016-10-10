@@ -14,18 +14,25 @@ def decrypt_valuables(f):
 
     masters_private_key = RSA.importKey(open('master.privatekey.der').read());
 
+    # received file structure
     # RSA(iv) + AES(file) + digest
     # RSA = 256 bytes, digest = 256 bytes
 
+    # taking out the encrypted IV
     rsa_encrypted_iv = f[:RSA_ENCRYPTION_SIZE]
     iv = masters_private_key.decrypt(rsa_encrypted_iv)
 
+    # taking out the encrypted file that is wedged between IV and digest
     encrypted_data = f[RSA_ENCRYPTION_SIZE:-SHA256.digest_size]
 
+    # decrypt the data based on IV located
     decrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).decrypt(encrypted_data)
     decrypted_data = ANSI_X923_unpad(decrypted_data, AES.block_size)
 
+    # take out the digest
     digest = f[-SHA256.digest_size:]
+
+    # generate our own digest
     decrypted_data_hash = SHA256.new(decrypted_data).digest()
 
     if digest != decrypted_data_hash:

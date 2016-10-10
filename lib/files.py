@@ -4,7 +4,6 @@ from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 from Crypto import Random
 from Crypto.Cipher import AES
-
 from lib.crypto_utils import ANSI_X923_pad
 
 # Instead of storing files on disk,
@@ -23,14 +22,16 @@ def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
     hashed_data = SHA256.new(data).digest();
 
-    # generate iv from RSA publickey
-    # generate AES CBC from RSA and iv
-    # encrypt AES key with RSA
-    # RSA(iv) + AES(file) + digest
-
+    # generating a random IV
+    # note this will also be used as the sample key
     iv = Random.get_random_bytes(AES.block_size)
-    aes_encrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).encrypt(ANSI_X923_pad(data, AES.block_size))
+    aes_cipher = AES.new(str(iv)[:16], AES.MODE_CBC, iv)
 
+    # padding the data to the appropriate size
+    aes_encrypted_data = aes_cipher.encrypt(ANSI_X923_pad(data, AES.block_size))
+
+    # using rsa to encrypt the iv that was used for AES
+    # note that a tuple is returned so the first entry is what we want
     rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
 
     return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
