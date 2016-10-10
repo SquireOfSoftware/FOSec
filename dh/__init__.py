@@ -38,14 +38,15 @@ GENERATOR_BASE = 2;
 def create_dh_key():
     # Creates a Diffie-Hellman key
     # Returns (public, private)
-    secret_key = random.randint(0, int(pow(2, 8)));
-    public_key = pow(GENERATOR_BASE, secret_key) % prime;
+    # Better implementation for public key pow(generator_base, secret_key, prime)
+    secret_key = random.randint(0, int(pow(2, prime)));
+    public_key = pow(GENERATOR_BASE, secret_key, prime);
     
     return (public_key, secret_key)
 
 def calculate_dh_secret(their_public, my_private):
     # Calculate the shared secret
-    shared_secret = pow(their_public, my_private) % prime;
+    shared_secret = pow(their_public, my_private, prime);
     #print ("shared secret: ", shared_secret);
     # Hash the value so that:
     # (a) There's no bias in the bits of the output
