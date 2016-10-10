@@ -3,6 +3,8 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
+from Crypto import Random
+from Crypto.Cipher import AES
 
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
@@ -21,6 +23,12 @@ def encrypt_for_master(data):
     hashed_data = SHA256.new(data);
 
     pkcs_cipher = PKCS1_v1_5.new(masters_public_key);
+
+    # generate iv from RSA publickey
+    # generate AES CBC from RSA and iv
+    # encrypt AES key with RSA
+    # RSA(iv) + AES(file) + digest
+
     return pkcs_cipher.encrypt(data) + hashed_data.digest();
 
 def upload_valuables_to_pastebot(fn):
