@@ -4,6 +4,7 @@ from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 from Crypto import Random
 from Crypto.Cipher import AES
+
 from lib.crypto_utils import ANSI_X923_pad
 
 # Instead of storing files on disk,
@@ -24,6 +25,9 @@ def encrypt_for_master(data):
 
     # generating a random IV
     # note this will also be used as the sample key
+
+
+
     iv = Random.get_random_bytes(AES.block_size)
     aes_cipher = AES.new(str(iv)[:16], AES.MODE_CBC, iv)
 
