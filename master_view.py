@@ -3,6 +3,7 @@ import os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
 
 def decrypt_valuables(f):
     # TODO: For Part 2, you'll need to decrypt the contents of this file

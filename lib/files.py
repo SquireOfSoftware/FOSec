@@ -3,6 +3,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
+from Crypto.Cipher import AES
 
 # Instead of storing files on disk,
 # we'll save them in memory for simplicity
