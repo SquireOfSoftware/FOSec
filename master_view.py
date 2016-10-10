@@ -1,7 +1,6 @@
 import os
 
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Hash import SHA256
 from Crypto.Cipher import AES
 from lib.crypto_utils import ANSI_X923_unpad
@@ -15,45 +14,24 @@ def decrypt_valuables(f):
 
     masters_private_key = RSA.importKey(open('master.privatekey.der').read());
 
-    #pkcs_cipher = PKCS1_v1_5.new(masters_private_key);
-    #decryption_error = None;
-
     # RSA(iv) + AES(file) + digest
     # RSA = 256 bytes, digest = 256 bytes
 
     rsa_encrypted_iv = f[:RSA_ENCRYPTION_SIZE]
-    print(rsa_encrypted_iv)
-
     iv = masters_private_key.decrypt(rsa_encrypted_iv)
-    print("IV: ")
-    print(iv)
 
-    encrypted_data = f[RSA_ENCRYPTION_SIZE:-SHA256.digest_size];
-
-    print("encrypted data")
-    print(encrypted_data)
-    print(len(encrypted_data))
+    encrypted_data = f[RSA_ENCRYPTION_SIZE:-SHA256.digest_size]
 
     decrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).decrypt(encrypted_data)
-    print(str(decrypted_data))
-    decrypted_data = ANSI_X923_unpad(decrypted_data, AES.block_size);
+    decrypted_data = ANSI_X923_unpad(decrypted_data, AES.block_size)
 
-    #decrypted_file = pkcs_cipher.decrypt(encrypted_data, decryption_error);
-    #decrypted_file_hash = SHA256.new(decrypted_file).digest();
+    digest = f[-SHA256.digest_size:]
+    decrypted_data_hash = SHA256.new(decrypted_data).digest()
 
-    digest = f[-SHA256.digest_size:];
-    decrypted_data_hash = SHA256.new(decrypted_data).digest();
-
-    print("hashes")
-    print(digest)
-    print(decrypted_data_hash)
-
-    #if decryption_error is not None:
-    #    print("There is a problem with decrypting this file.");
     if digest != decrypted_data_hash:
-        print("This file has been tampered with");
+        print("This file has been tampered with")
     else:
-        decoded_text = str(decrypted_data, 'ascii');
+        decoded_text = str(decrypted_data, 'ascii')
         print(decoded_text);
 
 if __name__ == "__main__":

