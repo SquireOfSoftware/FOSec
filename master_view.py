@@ -18,15 +18,18 @@ def decrypt_valuables(f):
     # RSA(iv) + AES(file) + digest
     # RSA = 256 bytes, digest = 256 bytes
 
-    # taking out the encrypted IV
-    rsa_encrypted_iv = f[:RSA_ENCRYPTION_SIZE]
-    iv = masters_private_key.decrypt(rsa_encrypted_iv)
-
+    # taking out the encrypted AES key and iv
+    rsa_encrypted_aes_key = f[:RSA_ENCRYPTION_SIZE]
+    key_and_iv = masters_private_key.decrypt(rsa_encrypted_aes_key)
+    iv = key_and_iv [AES.block_size:]
+    key = key_and_iv [:AES.block_size]
+	
+	
     # taking out the encrypted file that is wedged between IV and digest
     encrypted_data = f[RSA_ENCRYPTION_SIZE:-SHA256.digest_size]
 
-    # decrypt the data based on IV located
-    decrypted_data = AES.new(str(iv)[:16], AES.MODE_CBC, iv).decrypt(encrypted_data)
+    # decrypt the data based on key and IV located
+    decrypted_data = AES.new(str(key)[:16], AES.MODE_CBC, iv).decrypt(encrypted_data)
     decrypted_data = ANSI_X923_unpad(decrypted_data, AES.block_size)
 
     # take out the digest

